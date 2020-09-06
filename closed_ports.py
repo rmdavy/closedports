@@ -10,13 +10,22 @@ try:
 	#Get file to parse from the command line
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--xmlfile", help="nmap xml file you want to parse", type=str, required=True)
+	#Add option to be able to output open or closed ports
+	parser.add_argument("--state", help="port state to parse open/closed (default is closed)", type=str, default="closed", required=False)
 	#Add option to be able to output result to csv file
 	parser.add_argument("--output", help="save output to csv file", type=str, default="", required=False)
+
 	args = parser.parse_args()
 
 	#Display banner
-	print("\n[*] Nmap XML Scanner for Closed Ports")
+	print("\n[*] Nmap XML Parser for Open/Closed Ports")
 	print("[*] Richard Davy, ECSC plc- 2020\n")
+
+	#Print to screen whether parseing for open/closed ports
+	if args.state=="closed":
+		print("[*] Parsing for closed ports\n")
+	elif args.state=="open":
+		print("[*] Parsing for open ports\n")
 
 	#Read in file to parse
 	with open(args.xmlfile, 'r') as f:
@@ -26,10 +35,10 @@ try:
 
 	#If we're not outputing to file display results to screen
 	if args.output=="":
-		print("IP Protocol Port")
+		print("IP Protocol Port State")
 	
 	#Add titles to our list
-	output.append("IP,Protocol,Port")
+	output.append("IP,Protocol,Port,State")
 
 	#Find all instances of host
 	for td in soup.find_all('host'):
@@ -48,13 +57,25 @@ try:
 			#<port protocol="tcp" portid="22"><state state="closed" reason="syn-ack" reason_ttl="0"/><service name="ssh" method="table" conf="3"/></port>
 			sp_port = soup1.find_all('port')
 			for pt in sp_port:
-				#If the word closed is found, print address, protocol and port number
-				if "closed" in str(pt):
-					#If we're not outputing to file display results to screen
-					if args.output=="":
-						print(address + " " + pt.get('protocol') + " " + pt.get('portid'))
-					#Add results to our list
-					output.append(address + "," + pt.get('protocol') + "," + pt.get('portid'))
+				#Check port state for closed
+				if args.state=="closed":
+					#If the word closed is found, print address, protocol and port number
+					if "closed" in str(pt):
+						#If we're not outputing to file display results to screen
+						if args.output=="":
+							print(address + " " + pt.get('protocol') + " " + pt.get('portid')+ " " +"closed")
+						#Add results to our list
+						output.append(address + "," + pt.get('protocol') + "," + pt.get('portid')+ "," +"closed")
+				#Check port state for open
+				if args.state=="open":
+					#If the word closed is found, print address, protocol and port number
+					if "open" in str(pt):
+						#If we're not outputing to file display results to screen
+						if args.output=="":
+							print(address + " " + pt.get('protocol') + " " + pt.get('portid')+ " " +"open")
+						#Add results to our list
+						output.append(address + "," + pt.get('protocol') + "," + pt.get('portid')+ "," +"open")
+
 
 	#See if we're outputting to file
 	if args.output!="":
