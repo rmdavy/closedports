@@ -51,7 +51,12 @@ try:
 			for ad in add:
 				#There should only be one instance of address, store the value in a variable
 				#<address addr="10.37.66.5" addrtype="ipv4"/>
-				address=ad.get('addr')
+				if ad.get('addrtype')=="ipv4":
+					address4=ad.get('addr')
+				#For ipv6 addresses
+				#<address addr="00:1D:AA:B7:0C:98" addrtype="mac"
+				if ad.get('addrtype')=="mac":
+					address6=ad.get('addr')
 
 			#Find all instances of port
 			#<port protocol="tcp" portid="22"><state state="closed" reason="syn-ack" reason_ttl="0"/><service name="ssh" method="table" conf="3"/></port>
@@ -63,18 +68,33 @@ try:
 					if "closed" in str(pt):
 						#If we're not outputing to file display results to screen
 						if args.output=="":
-							print(address + " " + pt.get('protocol') + " " + pt.get('portid')+ " " +"closed")
+							print(address4 + " " + pt.get('protocol') + " " + pt.get('portid')+ " " +"closed")
 						#Add results to our list
-						output.append(address + "," + pt.get('protocol') + "," + pt.get('portid')+ "," +"closed")
+						output.append(address4 + "," + pt.get('protocol') + "," + pt.get('portid')+ "," +"closed")
 				#Check port state for open
 				if args.state=="open":
 					#If the word closed is found, print address, protocol and port number
 					if "open" in str(pt):
 						#If we're not outputing to file display results to screen
 						if args.output=="":
-							print(address + " " + pt.get('protocol') + " " + pt.get('portid')+ " " +"open")
+							print(address4 + " " + pt.get('protocol') + " " + pt.get('portid')+ " " +"open")
 						#Add results to our list
-						output.append(address + "," + pt.get('protocol') + "," + pt.get('portid')+ "," +"open")
+						output.append(address4 + "," + pt.get('protocol') + "," + pt.get('portid')+ "," +"open")
+
+			#Find all instances of extraports
+			#<ports><extraports state="closed" count="995">
+			sp_port = soup1.find_all('extraports')
+			for pt in sp_port:
+				#Check port state for closed
+				if args.state=="closed":
+					#If the word closed is found, print address, protocol and port number
+					if pt.get('state')=="closed":
+						#If we're not outputing to file display results to screen
+						if args.output=="":
+							print(address4 + " " + "Unknown" + " " + "multiple(" +str(pt.get('count'))+")"+" " +"closed")
+						#Add results to our list
+						output.append(address4 + "," + "Unknown" + "," + "multiple("+str(pt.get('count'))+")"+ "," +"closed")
+
 
 
 	#See if we're outputting to file
